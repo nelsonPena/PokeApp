@@ -17,7 +17,8 @@ class APIPokemonListDataSource: ApiPokemonListDataSourceType {
     
     func GetPokemonList() -> AnyPublisher<PokemonDTO, HttpClientError> {
         let endpoint = Endpoint(path: "pokemon",
-                                queryParameters: ["":""],
+                                queryParameters: ["offset":"151",
+                                                  "limit":"151"],
                                 method: .get)
         return httpClient.makeRequest(endpoint: endpoint, baseUrl: Bundle.main.infoDictionary?["BaseUrl"] as? String ?? "")
     }

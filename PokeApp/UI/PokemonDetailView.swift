@@ -25,53 +25,35 @@ struct PokemonDetailView: View {
                     .progressViewStyle(.circular)
             } else {
                 // Pokemon Details
-                ScrollView {
-                    VStack(alignment: .center, spacing: 20) {
-                        // Pokemon Image
-                        WebImage(url: URL(string: String(format: Bundle.main.infoDictionary?["ImageUrl"] as? String ?? "", viewModel.PokemonDetailPresentable.index.description)))
-                            .resizable()
-                            .placeholder(Image(systemName: "photo"))
-                            .placeholder {
-                                Rectangle().foregroundColor(.gray)
+                VStack() {
+                    ScrollView {
+                        VStack(alignment: .center, spacing: 20) {
+                            // Pokemon Image
+                            pokemonImage
+                            // Pokemon Name
+                            pokemonName
+                            // Details
+                            pokemonDetaisTitle
+                            ForEach(getSkills(), id: \.name) { skill in
+                                DetailRow(label: "text_skill".localized,
+                                          value: skill.name,
+                                          isStatus: false,
+                                          color: .cyan)
                             }
-                            .indicator(.activity)
-                            .transition(.fade(duration: 0.5))
-                            .scaledToFill()
-                            .frame(maxWidth: 200,
-                                   alignment: .center)
-                            .cornerRadius(8.0)
-                        
-                        // Pokemon Name
-                        Text(viewModel.PokemonDetailPresentable.name)
-                            .font(.system(size: 30, weight: .bold))
-                            .accessibilityIdentifier("nameLabel")
-                            .frame(maxWidth: .infinity,
-                                   alignment: .center)
-                            .foregroundColor(.black)
-                        
-                        // Details
-                        Text("text_skills".localized)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .font(.system(size: 17, weight: .bold))
-                        ForEach(getSkills(), id: \.ability.name) { skill in
-                            DetailRow(label: "text_skill".localized,
-                                      value: skill.ability.name,
+                            DetailRow(label: "text_height".localized,
+                                      value: viewModel.PokemonDetailPresentable.height.description,
                                       isStatus: false,
-                                      color: .cyan)
+                                      color: .black)
+                            DetailRow(label: "text_weight".localized,
+                                      value: viewModel.PokemonDetailPresentable.weight.description,
+                                      isStatus: false,
+                                      color: .black)
                         }
-                        DetailRow(label: "text_height".localized,
-                                  value: viewModel.PokemonDetailPresentable.height.description,
-                                  isStatus: false,
-                                  color: .black)
-                        DetailRow(label: "text_weight".localized,
-                                  value: viewModel.PokemonDetailPresentable.weight.description,
-                                  isStatus: false,
-                                  color: .black)
-                        Spacer()
-                        DoneButton(action: { self.presentationMode.wrappedValue.dismiss() })
+                        .padding(20)
                     }
-                    .padding(20)
-                }
+                    Spacer()
+                    DoneButton(action: { self.presentationMode.wrappedValue.dismiss() })
+                }.padding(20)
             }
         }
         .navigationBarTitle("detail_title".localized)
@@ -83,8 +65,42 @@ struct PokemonDetailView: View {
         }
     }
     
-    func getSkills() ->  [AbilityPresentableItem] {
+    var pokemonImage: some View {
+        WebImage(url: ImageUrl.getURL(index: index))
+            .resizable()
+            .placeholder(Image(systemName: "photo"))
+            .placeholder {
+                Rectangle().foregroundColor(.gray)
+            }
+            .indicator(.activity)
+            .transition(.fade(duration: 0.5))
+            .scaledToFill()
+            .frame(maxWidth: 200,
+                   alignment: .center)
+            .cornerRadius(8.0)
+    }
+    
+    var pokemonName: some View {
+        Text(viewModel.PokemonDetailPresentable.name)
+            .font(.system(size: 30, weight: .bold))
+            .accessibilityIdentifier("nameLabel")
+            .frame(maxWidth: .infinity,
+                   alignment: .center)
+            .foregroundColor(.black)
+    }
+    
+    var pokemonDetaisTitle: some View {
+        Text("text_skills".localized)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .font(.system(size: 17, weight: .bold))
+    }
+    
+    func getSkills() -> [AbilityPresentableItem] {
         viewModel.PokemonDetailPresentable.abilities ?? []
+    }
+    
+    var index: String {
+        viewModel.PokemonDetailPresentable.index.description
     }
 }
 

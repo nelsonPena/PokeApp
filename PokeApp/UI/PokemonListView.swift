@@ -1,6 +1,6 @@
 import SwiftUI
-import Foundation
 
+/// Vista que muestra una lista de Pokémon.
 struct PokemonListView: View {
     
     @EnvironmentObject var networkMonitor: NetworkMonitor
@@ -14,10 +14,8 @@ struct PokemonListView: View {
         self.createPokemonListDetailView = createPokemonListDetailView
     }
     
-    // MARK: - Body
     var body: some View {
         NavigationStack {
-            
             VStack {
                 if viewModel.showLoadingSpinner {
                     loadingView
@@ -35,6 +33,7 @@ struct PokemonListView: View {
     
     // MARK: - Subviews
     
+    /// Vista de carga que se muestra mientras se obtienen los datos.
     private var loadingView: some View {
         HStack(spacing: 10) {
             ProgressView().progressViewStyle(.circular)
@@ -42,14 +41,18 @@ struct PokemonListView: View {
         }
     }
     
+    /// Vista principal que muestra la lista de Pokémon o un mensaje de error.
     private var contentView: some View {
         if viewModel.showErrorMessage == nil {
             return AnyView(pokemonGrid)
         } else {
-            return AnyView(errorMessageView)
+            return AnyView(errorMessageView(viewModel: viewModel) {
+                viewModel.setup()
+            })
         }
     }
     
+    /// Vista de cuadrícula que muestra la lista de Pokémon.
     private var pokemonGrid: some View {
         var pokemonDetailViewData: PokemonDetailViewData?
         let adaptiveColumns = [
@@ -58,11 +61,11 @@ struct PokemonListView: View {
         return ScrollView {
             LazyVGrid(columns: adaptiveColumns, spacing: 10) {
                 ForEach(viewModel.searchResults, id: \.index) { pokemon in
-                    let pokemonView = PokemonView(viewModel: viewModel, item: pokemon)
-                    pokemonView
+                    PokemonView(viewModel: viewModel, item: pokemon)
                         .onTapGesture {
-                            viewModel.fetchDetails(id: pokemon.index) { response in
-                                pokemonDetailViewData = PokemonDetailViewData(detail: response)
+                            viewModel.fetchDetails(with: pokemon.index) { response in
+                                let detailPresentableItem = PokemonDetailPresentableItem(domainModel: response)
+                                pokemonDetailViewData = PokemonDetailViewData(detail: detailPresentableItem)
                                 isDetailViewPresented = true
                             }
                         }
@@ -72,9 +75,7 @@ struct PokemonListView: View {
                 .navigationTitle("text_title".localized)
                 .navigationBarTitleDisplayMode(.inline)
             }
-            
             .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "text_search_pokemon".localized)
-            
             .sheet(isPresented: $isDetailViewPresented) {
                 if let viewData = pokemonDetailViewData {
                     createPokemonListDetailView.create(with: viewData)
@@ -83,27 +84,64 @@ struct PokemonListView: View {
             .navigationBarItems(
                 trailing:
                     HStack {
-                        Button(action: {
-                            showModal.toggle()
-                        }) {
-                            Image(systemName: viewModel.selectedType == .all ? "line.horizontal.3.decrease.circle":  "line.horizontal.3.decrease.circle.fill")
-                        }
-                        .sheet(isPresented: $showModal) {
-                            ModalView(isPresented: $showModal,
-                                      selectedOption: viewModel.selectedType,
-                                      onAccept: { pokemonType in
-                                viewModel.selectedType = pokemonType
-                            })
-                        }
+                        filterButton
                     }
             )
         }
     }
     
-    var errorMessageView: some View {
-        Button(viewModel.showErrorMessage!) {
-            viewModel.setup()
-        }.foregroundColor(.blue)
+    /// Botón para mostrar un modal de filtrado de tipo de Pokémon.
+    var filterButton: some View {
+        Button(action: {
+            showModal.toggle()
+        }) {
+            Image(systemName: viewModel.selectedType == .all ? "line.horizontal.3.decrease.circle":  "line.horizontal.3.decrease.circle.fill")
+        }
+        .actionSheet(isPresented: $showModal) {
+            actionSheet
+        }
+    }
+    
+    /// Hoja de acción que muestra opciones de filtrado por tipo de Pokémon.
+    var actionSheet: ActionSheet {
+        ActionSheet(
+            title: Text("text_title_modal".localized),
+            buttons: [
+                .default(Text(PokemonType.all.name)) {
+                    viewModel.selectedType = .all
+                },
+                .cancel()
+            ]
+            + PokemonType.sortedCases
+                .filter { $0 != .all } // Filtrar el tipo .all
+                .map { type in
+                    .default(Text(type.name.capitalized)) {
+                        viewModel.selectedType = type
+                    }
+                }
+        )
+    }
+    
+    /// Vista que muestra un mensaje de error.
+    struct errorMessageView: View  {
+        @State var viewModel: PokemonListViewModel
+        let action: () -> Void
+        
+        var body: some View {
+            Spacer()
+            Button(action: action) {
+                Text(viewModel.showErrorMessage!)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, maxHeight: 30)
+            }.foregroundColor(.red)
+            .font(.system(size: 24, weight: .bold))
+            .background(.red.opacity(0.5))
+            .cornerRadius(12)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .lineLimit(1)
+        }
     }
 }
 

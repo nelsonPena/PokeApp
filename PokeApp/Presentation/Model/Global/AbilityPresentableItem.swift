@@ -8,5 +8,5 @@
 import Foundation
 
 struct AbilityPresentableItem {
-    let ability: SpeciesPresentableItem
+    let name: String
 }

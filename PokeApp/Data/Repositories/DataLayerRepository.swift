@@ -9,20 +9,19 @@ import Foundation
 import Combine
 
 /// `DataLayerRepository` es un repositorio de capa de datos que gestiona la interacción con los datos de personajes en la capa de persistencia.
-
 class DataLayerRepository {
         
-    private let dataProvider: DataProviderRepositoryType
+    private let dataProvider: PokemonDataProviderRepositoryType
     private var cancellables = Set<AnyCancellable>()
     
     /// Una matriz de personajes presentados como entidades de la capa de persistencia.
-    @Published var pokemon: [PokemonEntity] = []
+    @Published var pokemons: [PokemonEntity] = []
     
     /// Inicializa una nueva instancia de `DataLayerRepository` con un proveedor de datos de capa de persistencia.
     ///
     /// - Parameters:
     ///   - provider: El proveedor de datos de capa de persistencia que se utilizará para interactuar con los datos de los personajes  a eliminar.
-    init(provider: DataProviderRepositoryType) {
+    init(provider: PokemonDataProviderRepositoryType) {
         self.dataProvider = provider
         setup()
     }
@@ -30,30 +29,42 @@ class DataLayerRepository {
     // MARK: Private functions
     private func setup() {
         self.dataProvider.savedPokemonPublisher
-            .assign(to: \.pokemon, on: self)
+            .assign(to: \.pokemons, on: self)
             .store(in: &cancellables)
     }
+}
+
+extension DataLayerRepository: DataLayerRepositoryType {
     
-    // MARK: Public functions
+    var savedPokemon: Published<[PokemonEntity]>.Publisher {
+        $pokemons
+    }
     
-    /// Agrega listado de personajes en cache.
-    ///
-    /// - Parameters:
-    ///   - pokemon: listado de registros a crear
     func addPokemon(pokemon: [PokemonListPresentableItem]) {
         dataProvider.addPokemon(pokemon: pokemon)
     }
     
-    /// Elimina un personajesde la lista de los personajes  a eliminar.
-    ///
-    /// - Parameters:
-    ///   - Pokemon: La entidad de personaje a eliminar que se va a eliminar de la lista.
-    func delete(_ pokemon: PokemonEntity) {
-        dataProvider.delete(pokemon)
+    func addPokemonDetail(detail pokemonDetail: PokemonDetail) -> UUID {
+        dataProvider.addPokemonDetail(detail: pokemonDetail)
     }
     
-    /// Elimina todas los personajes.
-    func deleteAllPokemon() {
-        dataProvider.deleteAll()
+    func addPokemonAbility(detailId: UUID, ability: Ability)  {
+        dataProvider.addAbilities(detailId: detailId, ability: ability)
+    }
+    
+    func addTypeElement(detailId: UUID, element: TypeElement)  {
+        dataProvider.addTypeElement(detailId: detailId, element: element)
+    }
+    
+    func getPokemonDetail(with index: Int) -> AnyPublisher<PokemonDetailEntity?, CoreDataError> {
+        dataProvider.getPokemonDetail(with: index)
+    }
+    
+    func getPokemonAbilities(with detailId: UUID) -> AnyPublisher<[AbilitiesEntity]?, CoreDataError> {
+        dataProvider.getPokemonAbilities(with: detailId)
+    }
+    
+    func getTypeElement(with detailId: UUID) -> AnyPublisher<[TypeElementEntity]?, CoreDataError> {
+        dataProvider.getPokemonTypeElement(with: detailId)
     }
 }

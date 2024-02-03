@@ -8,26 +8,25 @@
 import UIKit
 import Combine
 
-
-/// ViewModel responsable de gestionar la lógica y los datos de la vista de lista de los personajes .
+/// ViewModel responsable de gestionar la lógica y los datos de la vista de lista de los personajes.
 class PokemonListViewModel: ObservableObject {
     
-    /// Tipo que proporciona acceso a las operaciones relacionadas con la obtención y eliminación de los personajes .
-    private let GetPokemonListType: GetPokemonListType
+    /// Tipo que proporciona acceso a las operaciones relacionadas con la obtención.
+    private let getPokemonListType: GetPokemonListType
     
-    /// Mapeador de errores específico de la vista de lista de los personajes .
+    /// Mapeador de errores específico de la vista de lista de los personajes.
     private let errorMapper: PokemonPresentableErrorMapper
     
     /// Conjunto de suscripciones a cambios de datos.
     private var cancellables = Set<AnyCancellable>()
     
-    /// Conjunto de suscripciones para cambios en la lista de personajes guardados
+    /// Conjunto de suscripciones para cambios en la lista de personajes guardados.
     @Published var savedPokemon: [SavedPokemon] = []
     
-    /// Proveedor de datos para la gestión de los personajes  en la aplicación.
+    /// Proveedor de datos para la gestión de los personajes en la aplicación.
     private let dataProvider: DataProvider
     
-    /// Lista de los personajes  que se muestra en la vista.
+    /// Lista de los personajes que se muestra en la vista.
     @Published var pokemonList: [PokemonListPresentableItem] = []
     
     @Published var pokemonDetail: PokemonDetailPresentableItem?
@@ -41,10 +40,10 @@ class PokemonListViewModel: ObservableObject {
     /// Mensaje de carga personalizado.
     @Published var loaderMensaje: String = ""
     
-    /// Variable de búsqueda por texto
+    /// Variable de búsqueda por texto.
     @Published var searchText = ""
     
-    /// Variable de búsqueda por tipo
+    /// Variable de búsqueda por tipo.
     @Published var selectedType: PokemonType = .all
     
     var searchResults: [PokemonListPresentableItem] {
@@ -64,15 +63,10 @@ class PokemonListViewModel: ObservableObject {
         }
     }
     
-    /// Inicializa un nuevo ViewModel de lista de los personajes .
-    /// - Parameters:
-    ///   - GetPokemonListType: Tipo que proporciona acceso a las operaciones de obtención y eliminación de los personajes .
-    ///   - dataProvider: Proveedor de datos para la gestión de los personajes  en la aplicación.
-    ///   - errorMapper: Mapeador de errores específico de la vista de lista de los personajes .
-    init(GetPokemonListType: GetPokemonListType,
+    init(getPokemonListType: GetPokemonListType,
          dataProvider: DataProvider,
          errorMapper: PokemonPresentableErrorMapper) {
-        self.GetPokemonListType = GetPokemonListType
+        self.getPokemonListType = getPokemonListType
         self.errorMapper = errorMapper
         self.dataProvider = dataProvider
         setup()
@@ -83,42 +77,91 @@ class PokemonListViewModel: ObservableObject {
     }
     
     /// Obtiene el proveedor de datos.
-    /// - Returns: Proveedor de datos para la gestión de los personajes .
+    /// - Returns: Proveedor de datos para la gestión de los personajes.
     func getDataProvider() -> DataProvider {
         dataProvider
     }
     
-    /// Configura la vista y carga la lista de los personajes .
+    /// Configura la vista y carga la lista de los personajes.
     func setup() {
         showLoadingSpinner = true
         showErrorMessage = nil
         loaderMensaje = "loading_records".localized
-        loadPokemons()
+        tryLoadLocalData()
     }
     
-    /// Carga las los personajes  en cache
-    func loadPokemons(){
-        dataProvider.$pokemon
-            .assign(to: \.savedPokemon, on: self)
-            .store(in: &cancellables)
-        
-        guard savedPokemon.count > 0 else {
-            getPokemonesInServer()
-            return
+    func addDetailsMainList(with index: Int) {
+        self.fetchDetails(with: index) { response in
+            self.updateMainList(index: index,
+                                response: response)
+            self.savePokemonDetail(detail: response)
         }
-        self.pokemonList = savedPokemon.map{
-            let index = $0.index
-            self.fetchDetails(id: index) { response in
-                self.updatePokemonDetails(index: index,
-                                          response: response)
-            }
-            return $0.mapper()
-        }
+    }
+    
+    func updateMainList(index: Int, response: PokemonDetail) {
+        let detailPresentableItem = PokemonDetailPresentableItem(domainModel: response)
+        guard index > 0 && index < pokemonList.count else { return }
+        pokemonList[index - 1].types = detailPresentableItem.types
+        pokemonList[index - 1].abilities = detailPresentableItem.abilities
+        pokemonList[index - 1].name = detailPresentableItem.name
+    }
+    
+    /// Maneja los errores generados durante la obtención o eliminación de los personajes.
+    /// - Parameter error: El error que se ha producido.
+    private func handleError(error: DomainError?) {
         showLoadingSpinner = false
+        showErrorMessage = errorMapper.map(error: error)
+    }
+}
+
+//MARK: Obtener data red
+
+extension PokemonListViewModel {
+    
+    /// Obtiene los detalles de un Pokémon, primero intenta cargarlos localmente y en caso de no encontrarlos, realiza una solicitud al servidor.
+    /// - Parameters:
+    ///   - id: Identificador del Pokémon.
+    ///   - completion: Manejador de finalización que devuelve el detalle del Pokémon.
+    func fetchDetails(with id: Int, completion: @escaping ((PokemonDetail) -> Void)) {
+        self.fetchLocalDetails(with: id) { [weak self] response in
+            guard let self = self else { return }
+            guard let response = response else {
+                self.getDetailsInServer(with: id) { pokemonDetail in
+                    completion(pokemonDetail)
+                }
+                return
+            }
+            
+            var domainModel = response
+            domainModel.index = id
+            completion(domainModel)
+        }
     }
     
-    func getPokemonesInServer(){
-        GetPokemonListType.getPokemons()
+    /// Realiza una solicitud al servidor para obtener los detalles de un Pokémon.
+    /// - Parameters:
+    ///   - id: Identificador del Pokémon.
+    ///   - completion: Manejador de finalización que devuelve el detalle del Pokémon.
+    func getDetailsInServer(with id: Int, completion: @escaping ((PokemonDetail) -> Void)) {
+        getPokemonListType.fetchPokemonDetails(id: id)
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                switch completion {
+                case .finished: break
+                case .failure(let error):
+                    self?.handleError(error: error)
+                }
+            }, receiveValue: { response in
+                var domainModel = response
+                domainModel.index = id
+                completion(domainModel)
+            })
+            .store(in: &cancellables)
+    }
+    
+    /// Obtiene la lista de Pokémon del servidor y actualiza la vista.
+    func getPokemonesInServer() {
+        getPokemonListType.getPokemons()
             .receive(on: DispatchQueue.main)
             .sink(receiveCompletion: { [weak self] completion in
                 switch completion {
@@ -130,47 +173,67 @@ class PokemonListViewModel: ObservableObject {
                 guard let self = self else { return }
                 let pokemonPresentable = pokemon.results.map {
                     let index = $0.index
-                    self.fetchDetails(id: index){ response in
-                        self.updatePokemonDetails(index: index,
-                                                  response: response)
-                    }
-                    return  PokemonListPresentableItem(domainModel: $0)
+                    self.addDetailsMainList(with: index)
+                    return PokemonListPresentableItem(domainModel: $0)
                 }
                 self.pokemonList = pokemonPresentable
-                dataProvider.addPokemon(pokemon: pokemonPresentable)
-                showLoadingSpinner = false
-                
+                self.savePokemons(list: pokemonPresentable)
+                self.showLoadingSpinner = false
             })
             .store(in: &cancellables)
     }
+}
+
+//MARK: Obtener data local
+
+extension PokemonListViewModel {
     
-    func fetchDetails(id: Int, completion: @escaping ((PokemonDetailPresentableItem) -> Void)) {
-        GetPokemonListType.fetchPokemonDetails(id: id)
-            .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { [weak self] completion in
-                switch completion {
-                case .finished: break
-                case .failure(let error):
-                    self?.handleError(error: error)
-                }
-            }, receiveValue: { response in
-                var domainModel = response
-                domainModel.index = id
-                completion(PokemonDetailPresentableItem(domainModel: domainModel))
-            })
+    /// Intenta cargar datos locales de los Pokémon guardados. Si no hay datos locales, realiza una solicitud al servidor.
+    func tryLoadLocalData() {
+        dataProvider.savedPokemons
+            .assign(to: \.savedPokemon, on: self)
             .store(in: &cancellables)
-    }
-    
-    func updatePokemonDetails(index: Int, response: PokemonDetailPresentableItem) {
-        guard index > 0 && index < pokemonList.count else { return }
-        pokemonList[index - 1].types = response.types
-        pokemonList[index - 1].abilities = response.abilities
-    }
-    
-    /// Maneja los errores generados durante la obtención o eliminación de los personajes .
-    /// - Parameter error: El error que se ha producido.
-    private func handleError(error: DomainError?) {
+        
+        guard savedPokemon.count > 0 else {
+            getPokemonesInServer()
+            return
+        }
+        
+        self.pokemonList = savedPokemon.map {
+            let index = $0.index
+            self.fetchLocalDetails(with: index) { response in
+                guard let response = response else { return }
+                self.updateMainList(index: index,
+                                    response: response)
+            }
+            return $0.mapper()
+        }
         showLoadingSpinner = false
-        showErrorMessage = errorMapper.map(error: error)
+    }
+    
+    /// Obtiene los detalles locales de un Pokémon.
+    /// - Parameters:
+    ///   - index: Índice del Pokémon.
+    ///   - completion: Manejador de finalización que devuelve los detalles del Pokémon.
+    func fetchLocalDetails(with index: Int, completion: @escaping ((PokemonDetail?) -> Void)) {
+        self.dataProvider.getDetail(with: index) { pokemonDetail in
+            guard let pokemonDetail = pokemonDetail else {
+                completion(nil)
+                return
+            }
+            completion(pokemonDetail)
+        }
+    }
+    
+    /// Guarda la lista de Pokémon en la base de datos local.
+    /// - Parameter pokemonPresentable: Lista de Pokémon presentables.
+    func savePokemons(list pokemonPresentable: [PokemonListPresentableItem]) {
+        dataProvider.addPokemon(pokemon: pokemonPresentable)
+    }
+    
+    /// Guarda los detalles de un Pokémon en la base de datos local.
+    /// - Parameter detail: Detalles del Pokémon.
+    func savePokemonDetail(detail pokemonDetail: PokemonDetail) {
+        dataProvider.addDetail(detail: pokemonDetail)
     }
 }

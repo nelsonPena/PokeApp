@@ -33,7 +33,7 @@ class PokemonListFactory {
     ///
     /// - Returns: Una instancia de `PokemonListViewModel`.
     func createViewModel() -> PokemonListViewModel {
-        return PokemonListViewModel(GetPokemonListType: createUseCase(),
+        return PokemonListViewModel(getPokemonListType: createUseCase(),
                                   dataProvider: createDataProviderUseCase(),
                                   errorMapper: PokemonPresentableErrorMapper())
     }
@@ -80,7 +80,7 @@ extension PokemonListFactory {
     /// Crea y devuelve una instancia de `CoreDataStack` utilizando el contexto compartido de la pila de persistencia.
     ///
     /// - Returns: Una instancia de `CoreDataStack`.
-    func createPersistence() -> CoreDataStack {
-        return CoreDataStack(context: PersistenceController.shared.container.viewContext)
+    func createPersistence() -> PokemonCoreDataStack {
+        return PokemonCoreDataStack(context: PersistenceController.shared.container.viewContext)
     }
 }

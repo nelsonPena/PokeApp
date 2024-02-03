@@ -13,63 +13,84 @@ struct PokemonView: View {
     
     @State var pokemonDetail: PokemonDetailPresentableItem?
     @State private var cancellables: Set<AnyCancellable> = Set()
-    @State public var showLoading = false
     @State var viewModel: PokemonListViewModel
     let dimensions: Double = 140
     let item: PokemonListPresentableItem
     
-    var body: some View {
-        ZStack() {
-            if showLoading {
-                VStack(alignment: .center) {
-                    loadingView
-                }
-            }else {
-                Image("pokeBallIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: .infinity)
-                    .edgesIgnoringSafeArea(.all)
-                    .opacity(0.1)
-                VStack {
-                    WebImage(url: URL(string: String(format: Bundle.main.infoDictionary?["ImageUrl"] as? String ?? "", item.index.description)))
-                        .resizable()
-                        .placeholder(Image(systemName: "photo"))
-                        .placeholder {
-                            Rectangle().foregroundColor(.clear)
-                        }
-                        .indicator(.activity)
-                        .transition(.fade(duration: 0.5))
-                        .scaledToFit()
-                        .frame(maxWidth: .infinity)
-                        .cornerRadius(8.0)
-                    VStack(alignment: .leading) {
-                        Text(item.name)
-                            .font(.system(size: 16, weight: .bold, design: .default))
-                            .foregroundColor(.black)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
-                        ForEach(getTypes(), id: \.slot) { elementType in
-                            RoundedTextView(text: elementType.type.name.capitalized(with: .current),
-                                            cornerRadius: 12)
-                        }
+    @ViewBuilder var detailView: some View {
+        if let _ = self.pokemonDetail {
+            backgroundImage
+            VStack {
+                pokemonImage
+                VStack(alignment: .leading) {
+                    nameView
+                    ForEach(getTypes(), id: \.name) { elementType in
+                        RoundedTextView(text: elementType.name.capitalized(with: .current),
+                                        cornerRadius: 12)
                     }
                 }
             }
+        }else {
+            VStack(alignment: .center) {
+                loadingView
+            }
+        }
+    }
+    
+    var body: some View {
+        ZStack() {
+            detailView
         }
         .padding(10)
         .background(getBackgroundColor())
         .cornerRadius(16.0)
         .onAppear {
-            viewModel.fetchDetails(id: item.index){ response in
-                pokemonDetail = response
+            viewModel.fetchDetails(with: item.index){ response in
+                pokemonDetail = PokemonDetailPresentableItem(domainModel: response) 
             }
         }
     }
     
-    private var loadingView: some View {
+    var loadingView: some View {
         HStack(spacing: 10) {
-            ProgressView().progressViewStyle(.circular)
-        }.background(Color.white)
+            ProgressView()
+                .progressViewStyle(.circular)
+        }
+        .frame(width: 110,height: 218)
+    }
+    
+    var backgroundImage: some View {
+        Image("pokeBallIcon")
+            .resizable()
+            .scaledToFit()
+            .frame(minWidth: 0, maxWidth: 100, minHeight: 0, maxHeight: .infinity)
+            .edgesIgnoringSafeArea(.all)
+            .opacity(0.1)
+    }
+    
+    var pokemonImage: some View {
+        WebImage(url: ImageUrl.getURL(index: idex))
+            .resizable()
+            .placeholder(Image(systemName: "photo"))
+            .placeholder {
+                Rectangle().foregroundColor(.clear)
+            }
+            .indicator(.activity)
+            .transition(.fade(duration: 0.5))
+            .scaledToFit()
+            .frame(maxWidth: .infinity)
+            .cornerRadius(8.0)
+    }
+    
+    var idex: String {
+        item.index.description
+    }
+    
+    var nameView: some View {
+        Text(item.name)
+            .font(.system(size: 16, weight: .bold, design: .default))
+            .foregroundColor(.black)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
     
     func getTypes() -> [TypeElementPresentableItem] {
@@ -78,8 +99,8 @@ struct PokemonView: View {
     }
     
     func getBackgroundColor() -> Color {
-        guard let name = pokemonDetail?.types?.first?.type.name else { return .white }
-        return pokemonDetail?.getColorForSpecies(name.lowercased()) ?? .white
+        guard let name = pokemonDetail?.types?.first?.name else { return Color("normalColor") }
+        return pokemonDetail?.getColorForSpecies(name.lowercased()) ?? Color("normalColor")
     }
     
     struct RoundedTextView: View {

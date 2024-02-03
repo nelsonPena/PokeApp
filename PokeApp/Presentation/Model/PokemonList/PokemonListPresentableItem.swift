@@ -30,6 +30,6 @@ struct PokemonListPresentableItem: PokemonDetailProtocol {
 
 extension PokemonListPresentableItem {
     func getTypes(name: String) -> [TypeElementPresentableItem]? {
-        return self.types?.filter { $0.type.name.lowercased().contains(name)}
+        return self.types?.filter { $0.name.lowercased().contains(name)}
     }
 }

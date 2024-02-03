@@ -16,20 +16,24 @@ struct ModalView: View {
     var body: some View {
         NavigationView {
             Form {
-                Picker("text_title_modal", selection: $selectedOption) {
-                    ForEach(PokemonType.sortedCases, id: \.self)  { option in
-                        Text(option.name.capitalized)
-                    }
-                }
-                .pickerStyle(WheelPickerStyle())
-                .onChange(of: selectedOption) { newValue in
-                    onAccept(newValue)
-                }
+                pickerView
             }
             .navigationTitle("text_title_modal".localized)
             .navigationBarItems(trailing: Button("text_done_button".localized) {
                 isPresented = false
             })
+        }
+    }
+    
+    var pickerView: some View {
+        Picker("text_title_modal", selection: $selectedOption) {
+            ForEach(PokemonType.sortedCases, id: \.self)  { option in
+                Text(option.name.capitalized)
+            }
+        }
+        .pickerStyle(WheelPickerStyle())
+        .onChange(of: selectedOption) { newValue in
+            onAccept(newValue)
         }
     }
 }

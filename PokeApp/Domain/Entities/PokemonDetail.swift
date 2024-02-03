@@ -13,24 +13,17 @@ struct PokemonDetail {
     let abilities: [Ability]
     let height: Int
     let name: String
-    let species: Species
     let weight: Int
     let types: [TypeElement]
 }
 
 // MARK: - Ability
 struct Ability {
-    let ability: Species
-}
-
-// MARK: - Species
-struct Species {
     let name: String
 }
 
 struct TypeElement {
-    let slot: Int
-    let type: Species
+    let name: String
 }
 
 // MARK: - Mappers
@@ -42,18 +35,12 @@ extension PokemonDetail {
 
 extension Ability {
     func mapper() -> AbilityPresentableItem {
-        .init(ability: self.ability.mapper())
-    }
-}
-
-extension Species {
-    func mapper() -> SpeciesPresentableItem {
-        .init(name: self.name.capitalized(with: .current))
+        .init(name: self.name)
     }
 }
 
 extension TypeElement {
     func mapper() -> TypeElementPresentableItem {
-        .init(slot: self.slot, type: self.type.mapper())
+        .init(name: self.name)
     }
 }
