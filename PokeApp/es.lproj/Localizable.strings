@@ -1,0 +1,24 @@
+/* 
+  Localizable.strings
+  PokeApp
+
+  Created by Nelson Geovanny Pena Agudelo on 14/10/23.
+  
+*/
+
+"generic_text_error" = "Algo salió mal, reintentar";
+"try_later_text_error" = "Error, reintentar";
+"detail_title" = "Detalle";
+"text_done_button" = "Aceptar";
+"Back" = "Volver";
+"loading_records" = "Cargando registros";
+"delete_records" = "Eliminando registros pendientes";
+"retry_text" = "Reintentar";
+"cancel_button_text" = "Cancelar";
+"text_title" = "Pokédex";
+"text_skills" = "Habilidades";
+"text_skill" = "Habilidad:";
+"text_height" = "Altura:";
+"text_weight" = "Peso:";
+"text_search_pokemon" = "Buscar un pokemon";
+"text_title_modal" = "Filtrar por tipo";

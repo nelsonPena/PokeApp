@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "48E4299F-FF4C-4DE2-AC6D-52E07036E1FE"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "AACC2C14-3167-486D-B966-A4F894FC1D07"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "PokeApp/Presentation/Model/CharacterListPresentableItem.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "23"
+            endingLineNumber = "23"
+            landmarkName = "init(savedModel:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "AACC2C14-3167-486D-B966-A4F894FC1D07 - ea614685cf3ad20"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "PokeApp.PokemonListPresentableItem.init(savedModel: PokeApp.SavedPokemon) -&gt; PokeApp.PokemonListPresentableItem"
+                  moduleName = "PokeApp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/levalde/Documents/TheRickandMortyAPI/PokeApp/Presentation/Model/CharacterListPresentableItem.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "23"
+                  endingLineNumber = "23"
+                  offsetFromSymbolStart = "72">
+               </Location>
+               <Location
+                  uuid = "AACC2C14-3167-486D-B966-A4F894FC1D07 - ea614685cf3ad20"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "PokeApp.PokemonListPresentableItem.init(savedModel: PokeApp.SavedPokemon) -&gt; PokeApp.PokemonListPresentableItem"
+                  moduleName = "PokeApp"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/levalde/Documents/TheRickandMortyAPI/PokeApp/Presentation/Model/CharacterListPresentableItem.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "23"
+                  endingLineNumber = "23"
+                  offsetFromSymbolStart = "76">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

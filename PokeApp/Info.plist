@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ImageUrl</key>
+	<string>$(IMAGE_URL)</string>
+	<key>BaseUrl</key>
+	<string>$(BASE_URL)</string>
+</dict>
+</plist>
