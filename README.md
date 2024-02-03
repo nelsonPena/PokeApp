@@ -37,6 +37,6 @@ En la arquitectura limpia, el **Principio de Inversión de Dependencia (Dependen
 Entre otros puntos donde en esta solución se hace uso constante de los principios **SOLID**
 
 
-[![Alt text]()](https://youtu.be/4F3kRccU6q4)
+(https://youtu.be/4F3kRccU6q4)
 
 
