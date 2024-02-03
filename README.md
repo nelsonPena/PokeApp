@@ -35,3 +35,8 @@ Al implementar arquitectura limpia tenemos casos de uso los cuales se ciñen al 
 En la arquitectura limpia, el **Principio de Inversión de Dependencia (Dependency Inversion Principle - DIP)** implica que las capas de nivel superior no deben depender directamente de las capas de nivel inferior, sino de abstracciones. Un ejemplo podría ser una aplicación que tiene una capa de presentación, una capa de dominio y una capa de datos.
 
 Entre otros puntos donde en esta solución se hace uso constante de los principios **SOLID**
+
+
+[![Alt text]()](https://youtu.be/4F3kRccU6q4)
+
+
